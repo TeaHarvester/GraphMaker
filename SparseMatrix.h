@@ -1,3 +1,5 @@
+#IFNDEF SPARSEMATRIX
+#DEfiNE SPARSEMATRIX
 #include<vector>
 
 struct SparseMatrix
@@ -6,3 +8,5 @@ struct SparseMatrix
     std::vector<unsigned int> col;
     std::vector<unsigned int> rowptr;
 }
+
+#ENDIF
