@@ -1,17 +1,17 @@
-CFLAG = -Wall -g
+CXXFLAGS = -Wall -g -Iinclude
 OBJS = main.o graph.o sparsematrix.o
 
 GraphMaker: $(OBJS)
-	$(CXX) $(CFLAG) $(OBJS) -o $@
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
 
-main.o: main.cpp graph.cpp
-	$(CXX) $(CFLAG) -c main.cpp
+main.o: src/main.cpp src/graph.cpp
+	$(CXX) $(CXXFLAGS) -c src/main.cpp
 
-graph.o: graph.cpp sparsematrix.cpp
-	$(CXX) $(CFLAG) -c graph.cpp
+graph.o: src/graph.cpp src/sparsematrix.cpp
+	$(CXX) $(CXXFLAGS) -c src/graph.cpp
 
-sparsematrix.o: sparsematrix.cpp
-	$(CXX) $(CFLAG) -c sparsematrix.cpp
+sparsematrix.o: src/sparsematrix.cpp
+	$(CXX) $(CXXFLAGS) -c src/sparsematrix.cpp
 
 clean:
 	-rm -f *.o core *.core
