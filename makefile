@@ -1,8 +1,9 @@
-CXXFLAGS = -Wall -g -Iinclude
+CXXFLAGS = -Wall -g -Iinclude -Ifreeglut/include/GL -Iglew/include/GL -Lfreeglut/lib -Lglew/lib
+LDFLAGS = -lfreeglut -lglew32
 OBJS = main.o graph.o sparsematrix.o
 
 GraphMaker: $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o $@
 
 main.o: src/main.cpp src/graph.cpp
 	$(CXX) $(CXXFLAGS) -c src/main.cpp
