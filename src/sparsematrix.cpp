@@ -24,15 +24,36 @@ void SparseMatrix::AddConnection(unsigned int row, unsigned int column, float va
     }
 }
 
-std::vector<unsigned int> SparseMatrix::GetAdjacentVertices(const unsigned int vertex)
+const std::vector<unsigned int> SparseMatrix::GetAdjacentVertices(const unsigned int vertex)
 {
     unsigned int adjacent_ptr = rowptr[vertex];
     unsigned int N_adjacent = rowptr[vertex + 1] - adjacent_ptr;
     std::vector<unsigned int> output;
 
-    for (unsigned int i = adjacent_ptr; i < N_adjacent; ++i)
+    for (unsigned int i = adjacent_ptr; i < adjacent_ptr + N_adjacent; ++i)
     {
         output.push_back(col[i]);
+    }
+
+    return output;
+}
+
+const std::vector<std::vector<unsigned int>> SparseMatrix::GetEdges()
+{
+    std::vector<std::vector<unsigned int>> output(col.size(), std::vector<unsigned int>(2));
+
+    unsigned int n_iters = 0;
+
+    for (unsigned int i = 0; i < dimension; ++i)
+    {
+        std::vector<unsigned int> adjacent_vertices = GetAdjacentVertices(i);
+
+        for (unsigned int j = 0; j < adjacent_vertices.size(); ++j)
+        {
+            output[n_iters][0] = i;
+            output[n_iters][1] = adjacent_vertices[j];
+            ++n_iters;
+        }
     }
 
     return output;

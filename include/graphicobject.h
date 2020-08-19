@@ -11,8 +11,11 @@
 struct GraphicObject
 {
     float* vertices;
-    unsigned int * indices;
+    unsigned int* indices;
+    Graph* source_graph;
 
+    void WriteVertexClusters();
+    void WriteIndices();
     GraphicObject(Graph &graph);
     ~GraphicObject();
 };

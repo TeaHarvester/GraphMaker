@@ -35,6 +35,7 @@ void Graph::GenerateLFRGraph(unsigned int dim,
     // tis a silly approximation
 
     dimension = dim;
+    n_communities = n_comm;
 
     if (adjacency_matrix != NULL)
     {
@@ -70,7 +71,7 @@ void Graph::GenerateLFRGraph(unsigned int dim,
     }
 
     srand(2948372);
-    unsigned int iters = 0;
+    unsigned int n_iters = 0;
 
     while (available_vertices.size() > 1)
     {
@@ -87,28 +88,32 @@ void Graph::GenerateLFRGraph(unsigned int dim,
         unsigned int vertex_2 = available_vertices[index_2][0];
         unsigned int valent_index = 2;
 
-        if (iters > dimension)
+        if (n_iters > dimension)
         {
             for (unsigned int i = 0; i < available_vertices[index_1][1] + available_vertices[index_1][2]; ++i)
             {   
                 start:
-                unsigned int iters_2 = 0;
+                unsigned int n_iters_2 = 0;
 
                 while (vertex_1 == vertex_2 || adjacency_matrix->IsAdjacent(vertex_1, vertex_2))
                 {
-                    if (iters_2 > dimension)
+                    if (n_iters_2 > dimension)
                     {
-                        std::cout << "Vertex " << vertex_1 << " is saturated" << std::endl;
+                        std::cout << "Vertex " << vertex_1 << " is saturated; skipping" << std::endl;
                         ++i;
                         goto start; 
                     }
+
                     vertex_2 = rand() % dimension;
+                    ++n_iters_2;
                 } 
+
+                std::cout << "no suitable matches; connecting vertices " << vertex_1 << " and " << vertex_2 << std::endl;
 
                 adjacency_matrix->AddConnection(vertex_1, vertex_2, 1);
                 adjacency_matrix->AddConnection(vertex_2, vertex_1, 1);
                 available_vertices.erase(available_vertices.cbegin() + index_1);
-                iters_2 = 0;
+                n_iters_2 = 0;
                 continue;
             }
         }
@@ -143,17 +148,21 @@ void Graph::GenerateLFRGraph(unsigned int dim,
                 available_vertices.erase(available_vertices.cbegin() + index_2);
             }
 
-            iters = 0;
+            n_iters = 0;
             continue;
         }
 
-        ++iters;
+        ++n_iters;
     }
+
+    n_edges = adjacency_matrix->GetEdges().size();
 }
 
 Graph::Graph()
 :
 dimension(0),
+n_edges(0),
+n_communities(0),
 adjacency_matrix(NULL),
 true_communities(NULL)
 {}

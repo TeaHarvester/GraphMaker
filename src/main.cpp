@@ -35,10 +35,12 @@ int main(int argc, char **argv)
     //glutMainLoop();
 
     Graph testgraph; 
-    testgraph.GenerateLFRGraph(20, 2, 10, 2, 3, 2, 0.8);
+    testgraph.GenerateLFRGraph(20, 5, 10, 2, 3, 2, 0.8);
     testgraph.adjacency_matrix->Print();
 
     GraphicObject renderate(testgraph);
+    renderate.WriteVertexClusters();
+    renderate.WriteIndices();
 
     return 0;
 }

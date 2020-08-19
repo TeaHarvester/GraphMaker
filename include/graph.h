@@ -8,6 +8,7 @@ class Graph
     public: 
     unsigned int dimension;
     unsigned int n_edges;
+    unsigned int n_communities;
     SparseMatrix *adjacency_matrix;
     std::vector<unsigned int> *true_communities;
 
