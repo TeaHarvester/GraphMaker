@@ -5,23 +5,22 @@ A repository for creating random graphs, reading _.GRAPH_ files, community detec
 Dependencies
 --------
 freeglut  
-GLEW
 
 Installation
 --------
-**Windows:**
-Download and install **MinGW** along with **MSYS** if required.
+This repository was built in Windows MinGW for GNU compatibility. The _freeglut_ library is freely available on other platforms.
 
-Open the MSYS console and navigate to your home directory:  
-```
-cd C:\msys\1.0\home\\_your_username_
-``` 
-Download this repository:
+**Windows:**
+Download and install **MinGW** along with **MSYS** if and as required.
+
+Open the MSYS console and download this repository:
 ```
 git clone https://github.com/TeaHarvester/GraphMaker
 ```
-Download the **freeglut** library from https://www.transmissionzero.co.uk/files/software/development/GLUT/freeglut-MinGW.zip and extract it into GraphMaker's root directory.  
-Download the **GLEW** TGZ distribution from http://glew.sourceforge.net/ and extract it in the MSYS console as follows:
+Enter the root directory and compile from source:
 ```
-tar xvf glew-<version>.tgz
+cd GraphMaker
+```
+```
+make
 ```
