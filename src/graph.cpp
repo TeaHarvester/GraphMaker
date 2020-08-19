@@ -3,14 +3,13 @@
 #include<random>
 #include "graph.h"
 
-void Graph::GenerateLFRGraph(int dim,
-                             int k_min,
-                             int k_max,
+void Graph::GenerateLFRGraph(unsigned int dim,
+                             unsigned int k_min,
+                             unsigned int k_max,
                              float a,
-                             int n_comm,
+                             unsigned int n_comm,
                              float b,
-                             float mixing_parameter
-                            )
+                             float mixing_parameter)
 {
     // generate graph with random degree for each vertex based on a power law
     // 
@@ -92,14 +91,24 @@ void Graph::GenerateLFRGraph(int dim,
         {
             for (unsigned int i = 0; i < available_vertices[index_1][1] + available_vertices[index_1][2]; ++i)
             {   
-                while (vertex_1 == vertex_2)
+                start:
+                unsigned int iters_2 = 0;
+
+                while (vertex_1 == vertex_2 || adjacency_matrix->IsAdjacent(vertex_1, vertex_2))
                 {
+                    if (iters_2 > dimension)
+                    {
+                        std::cout << "Vertex " << vertex_1 << " is saturated" << std::endl;
+                        ++i;
+                        goto start; 
+                    }
                     vertex_2 = rand() % dimension;
                 } 
 
                 adjacency_matrix->AddConnection(vertex_1, vertex_2, 1);
                 adjacency_matrix->AddConnection(vertex_2, vertex_1, 1);
                 available_vertices.erase(available_vertices.cbegin() + index_1);
+                iters_2 = 0;
                 continue;
             }
         }
@@ -109,7 +118,9 @@ void Graph::GenerateLFRGraph(int dim,
             valent_index = 1;
         }
 
-        if (available_vertices[index_1][valent_index] > 0 && available_vertices[index_1][valent_index] > 0)
+        if (available_vertices[index_1][valent_index] > 0 &&
+            available_vertices[index_1][valent_index] > 0 &&
+            !adjacency_matrix->IsAdjacent(vertex_1, vertex_2))
         {
             adjacency_matrix->AddConnection(vertex_1, vertex_2, 1);
             adjacency_matrix->AddConnection(vertex_2, vertex_1, 1);

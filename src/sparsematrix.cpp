@@ -24,6 +24,35 @@ void SparseMatrix::AddConnection(unsigned int row, unsigned int column, float va
     }
 }
 
+std::vector<unsigned int> SparseMatrix::GetAdjacentVertices(const unsigned int vertex)
+{
+    unsigned int adjacent_ptr = rowptr[vertex];
+    unsigned int N_adjacent = rowptr[vertex + 1] - adjacent_ptr;
+    std::vector<unsigned int> output;
+
+    for (unsigned int i = adjacent_ptr; i < N_adjacent; ++i)
+    {
+        output.push_back(col[i]);
+    }
+
+    return output;
+}
+
+bool SparseMatrix::IsAdjacent(const unsigned int vertex1, const unsigned int vertex2)
+{
+    std::vector<unsigned int> adjacent_vertices = GetAdjacentVertices(vertex1);
+
+    for (unsigned int i = 0; i < adjacent_vertices.size(); ++i)
+    {
+        if (adjacent_vertices[i] == vertex2)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void SparseMatrix::Print()
 {
     std::cout << "i j v q" << std::endl;

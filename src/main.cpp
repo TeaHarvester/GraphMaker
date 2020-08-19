@@ -1,9 +1,9 @@
 #include<iostream>
 #include<GL/glut.h>
-//#include<glew.h>
 #include "graph.h"
+#include "graphicobject.h"
 
-void render(void)
+void render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -32,11 +32,14 @@ int main(int argc, char **argv)
 
     // enter the processing loop
 
-    glutMainLoop();
+    //glutMainLoop();
 
     Graph testgraph; 
     testgraph.GenerateLFRGraph(20, 2, 10, 2, 3, 2, 0.8);
     testgraph.adjacency_matrix->Print();
+
+    GraphicObject renderate(testgraph);
+
     return 0;
 }
 
