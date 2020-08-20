@@ -16,6 +16,7 @@ struct SparseMatrix
     const std::vector<std::vector<unsigned int>> GetEdges();
     bool IsAdjacent(const unsigned int vertex1, const unsigned int vertex2);
     void AddConnection(const unsigned int row, const unsigned int column, float value);
+    float GetEdgeWeight(unsigned int vertex_1, unsigned int vertex_2);
     void Print();
     SparseMatrix(unsigned int dim);
 };
