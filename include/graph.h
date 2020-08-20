@@ -9,7 +9,9 @@ class Graph
     unsigned int dimension;
     unsigned int n_edges;
     unsigned int n_communities;
+    unsigned int max_degree;
     SparseMatrix *adjacency_matrix;
+    std::vector<unsigned int>* degree;
     std::vector<unsigned int> *true_communities;
 
     void GenerateLFRGraph(unsigned int dim,

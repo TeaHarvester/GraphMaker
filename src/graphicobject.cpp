@@ -28,10 +28,10 @@ void GraphicObject::WriteVertexClusters(const std::vector<unsigned int>& communi
 
     float pi = 3.141592f;
     const unsigned int n_communities = source_graph->n_communities;
-    const float global_radius = 0.6f;
+    const float global_radius = 0.55f;
     const float global_angular_increment = 2.0f * pi / (float)n_communities;
     const float param1 = 1.0f;
-    const float param2 = 0.2f;
+    const float param2 = 0.3f;
 
     // membership: N_communities x N_members
 

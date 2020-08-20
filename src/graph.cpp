@@ -50,6 +50,7 @@ void Graph::GenerateLFRGraph(unsigned int dim,
     }
 
     true_communities = new std::vector<unsigned int>(dimension);
+    degree = new std::vector<unsigned int>(dimension, 0.0f);
 
     float x_min = pow(float(k_min),-1/a);
     float x_max = pow(float(k_max),-1/a);
@@ -112,6 +113,8 @@ void Graph::GenerateLFRGraph(unsigned int dim,
 
                 adjacency_matrix->AddConnection(vertex_1, vertex_2, 1);
                 adjacency_matrix->AddConnection(vertex_2, vertex_1, 1);
+                ++(*degree)[vertex_1];
+                ++(*degree)[vertex_2];
                 available_vertices.erase(available_vertices.cbegin() + index_1);
                 n_iters_2 = 0;
                 continue;
@@ -129,7 +132,8 @@ void Graph::GenerateLFRGraph(unsigned int dim,
         {
             adjacency_matrix->AddConnection(vertex_1, vertex_2, 1);
             adjacency_matrix->AddConnection(vertex_2, vertex_1, 1);
-
+            ++(*degree)[vertex_1];
+            ++(*degree)[vertex_2];
             --available_vertices[index_1][valent_index];
             --available_vertices[index_2][valent_index];
 
@@ -156,6 +160,14 @@ void Graph::GenerateLFRGraph(unsigned int dim,
     }
 
     n_edges = adjacency_matrix->GetEdges().size();
+
+    for (unsigned int i = 0; i < dimension; ++i)
+    {
+        if ((*degree)[i] > max_degree)
+        {
+            max_degree = (*degree)[i];
+        }
+    }
 }
 
 Graph::Graph()
@@ -163,7 +175,9 @@ Graph::Graph()
 dimension(0),
 n_edges(0),
 n_communities(0),
+max_degree(0),
 adjacency_matrix(NULL),
+degree(NULL),
 true_communities(NULL)
 {}
 
@@ -175,6 +189,11 @@ Graph::~Graph()
     }
 
     if (true_communities != NULL)
+    {
+        delete true_communities;
+    }
+
+    if (degree != NULL)
     {
         delete true_communities;
     }

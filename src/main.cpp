@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
     // assign global GraphicObject
     Graph testgraph;
-    testgraph.GenerateLFRGraph(100, 5, 40, 2, 7, 1.5, 0.8);
+    testgraph.GenerateLFRGraph(100, 5, 40, 1.5, 7, 1.5, 0.8);
     GraphicObject g(testgraph);
     gl_input = &g;
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
-    glutInitWindowSize(320, 320);
+    glutInitWindowSize(500, 500);
     glutCreateWindow("GraphMaker");
 
     // enable alpha blending
@@ -53,6 +53,12 @@ void Render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLineWidth(2);
+    float min_vertex_size = 0.02f;
+    float max_vertex_size = 0.08f;
+    float vs_range = max_vertex_size - min_vertex_size;
+    const unsigned int& max_degree = gl_input->source_graph->max_degree;
+    const std::vector<unsigned int>& degree = *gl_input->source_graph->degree;
+
     float*& VAO = gl_input->vertex_array;
 
     // render vertices as circles
@@ -60,13 +66,15 @@ void Render()
     for (unsigned int i = 0; i < gl_input->n_vertices; ++i)
     {   
         unsigned int vertex_ptr = i * 7;
+        float radius = (((float)degree[i] / (float)max_degree) * vs_range) + (float)min_vertex_size;
         glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], 0.6f);
-        DrawCircle(VAO[vertex_ptr], VAO[vertex_ptr + 1], 0.02, true);
+        DrawCircle(VAO[vertex_ptr], VAO[vertex_ptr + 1], radius, true);
         glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], 1.0f);
-        DrawCircle(VAO[vertex_ptr], VAO[vertex_ptr + 1], 0.02, false);
+        DrawCircle(VAO[vertex_ptr], VAO[vertex_ptr + 1], radius, false);
     }
 
     // render edges as lines
+    glLineWidth(1);
     glBegin(GL_LINES);
     for (unsigned int i = 0; i < gl_input->n_indices; ++i)
     {   
