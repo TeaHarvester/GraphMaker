@@ -3,7 +3,22 @@
 #include<vector>
 #include"graphicobject.h"
 
-void GraphicObject::WriteVertexClusters()
+void GraphicObject::Init()
+{
+    n_vertices = source_graph->dimension;
+    n_indices = source_graph->n_edges * 2;
+
+    vertex_array = new float[n_vertices * 7];
+    index_array = new unsigned int[n_indices * 2];
+
+    const std::vector<unsigned int>& communities = *(source_graph->true_communities);
+
+    WriteVertexClusters(communities);
+    WriteColours(communities);
+    WriteIndexArray();
+}
+
+void GraphicObject::WriteVertexClusters(const std::vector<unsigned int>& communities)
 {
     // arrange communities in an outer circle around the origin
     // arrange vertices in a circle within their respective communities
@@ -12,13 +27,10 @@ void GraphicObject::WriteVertexClusters()
     // param2: lower_bound of community radius
 
     float pi = 3.141592f;
-    const unsigned int n_vertices = source_graph->dimension;
     const unsigned int n_communities = source_graph->n_communities;
-    std::vector<unsigned int>& communities = *(source_graph->true_communities);
-
-    const float global_radius = 0.8f;
+    const float global_radius = 0.25f;
     const float global_angular_increment = 2.0f * pi / (float)n_communities;
-    const float param1 = 2.5f;
+    const float param1 = 1.5f;
     const float param2 = 0.2f;
 
     // membership: N_communities x N_members
@@ -42,37 +54,82 @@ void GraphicObject::WriteVertexClusters()
         {
             const unsigned int v = membership[i][j];
             
-            vertices[v * 7] = (radius * std::sin(j * angular_increment)) + centre_x;
-            vertices[(v * 7) + 1] = (radius * std::cos(j * angular_increment)) + centre_y;
-            vertices[(v * 7) + 2] = 0.0f;
+            vertex_array[v * 7] = (radius * std::sin(j * angular_increment)) + centre_x;
+            vertex_array[(v * 7) + 1] = (radius * std::cos(j * angular_increment)) + centre_y;
+            vertex_array[(v * 7) + 2] = 0.0f;
         }
     }
 }
 
-void GraphicObject::WriteIndices()
+void GraphicObject::WriteColours(const std::vector<unsigned int>& communities)
+{
+    const float& dimension = (float)source_graph->dimension;
+    const unsigned int& n_communities = source_graph->n_communities;
+    float colour_mixer[3] = {1.0f, 1.0f, 0.0f};
+    unsigned int n_iters_t = 0;
+    unsigned int n_iters_c = 0;
+    
+    for (unsigned int i = 0; i < n_communities; ++i)
+    {
+        if (n_iters_t <= dimension / 2)
+        {
+           colour_mixer[0] = 1.0f - ((3 * n_iters_c) / dimension);
+           colour_mixer[1] = 1.0f;
+           colour_mixer[2] = 0.0f + ((3 * n_iters_c) / dimension);
+        }
+
+        else if (n_iters_t <= 2 * dimension / 3)
+        {   
+           colour_mixer[0] = 0.0f + ((3 * n_iters_c) / (2 * dimension));
+           colour_mixer[1] = 1.0f - ((3 * n_iters_c) / (2 * dimension));
+           colour_mixer[2] = 1.0f;
+        }
+
+        else
+        {   
+           colour_mixer[0] = 1.0f + (n_iters_c / dimension);
+           colour_mixer[1] = 0.0f + (n_iters_c / dimension);
+           colour_mixer[2] = 1.0f;
+        }
+
+        n_iters_c = 0.0f;
+
+        for (unsigned int j = 0; j < dimension; ++j)
+        {
+            if (i == communities[j])
+            {
+                vertex_array[7 * j + 3] = colour_mixer[0];
+                vertex_array[7 * j + 4] = colour_mixer[1];
+                vertex_array[7 * j + 5] = colour_mixer[2];
+                vertex_array[7 * j + 6] = 1.0f;
+                ++n_iters_t;
+                ++n_iters_c;
+            }
+        }
+    }
+}
+
+void GraphicObject::WriteIndexArray()
 {
     const std::vector<std::vector<unsigned int>> edges = source_graph->adjacency_matrix->GetEdges();
 
     for (unsigned int i = 0; i < edges.size(); ++i)
     {
         const unsigned int index = i * 2;
-        indices[index] = edges[i][0];
-        indices[index + 1] = edges[i][1];
-
-        std::cout << indices[index] << ", " << indices[index + 1] << std::endl;
+        index_array[index] = edges[i][0];
+        index_array[index + 1] = edges[i][1];
     }
 }
 
-GraphicObject::GraphicObject(Graph &graph)
+GraphicObject::GraphicObject(const Graph& graph)
 :
 source_graph(&graph)
 {
-    vertices = new float[source_graph->dimension * 7];
-    indices = new unsigned int[source_graph->n_edges * 2];
+    Init();
 }
 
 GraphicObject::~GraphicObject()
 {
-    delete vertices;
-    delete indices;
+    delete vertex_array;
+    delete index_array;
 }

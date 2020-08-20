@@ -8,15 +8,24 @@
 // vertices: N x 7 array of position (xyz) and colours (RGBa)
 // indices: V x 2 array for drawing lines between vertices
 
-struct GraphicObject
+class GraphicObject
 {
-    float* vertices;
-    unsigned int* indices;
-    Graph* source_graph;
+    public:
+    unsigned int n_vertices;
+    unsigned int n_indices; 
+    float* vertex_array;
+    unsigned int* index_array;
+    const Graph* source_graph;
 
-    void WriteVertexClusters();
-    void WriteIndices();
-    GraphicObject(Graph &graph);
+    void Init();
+
+    private:
+    void WriteVertexClusters(const std::vector<unsigned int>& communities);
+    void WriteColours(const std::vector<unsigned int>& communities);
+    void WriteIndexArray();
+
+    public:
+    GraphicObject(const Graph& graph);
     ~GraphicObject();
 };
 
