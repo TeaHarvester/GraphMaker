@@ -2,6 +2,8 @@ GraphMaker
 ========
 A repository for creating random graphs, reading _.GRAPH_ files, community detection and visualising the results. 
 
+![](GraphMaker.JPG)
+
 Dependencies
 --------
 freeglut  
