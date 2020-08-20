@@ -6,7 +6,7 @@
 #include "graph.h"
 #include "graphicobject.h"
 
-void DrawCircle(float origin_x, float origin_y, float radius);
+void DrawCircle(float origin_x, float origin_y, float radius, bool filled);
 void Render();
 
 const float pi = 3.141592f;
@@ -14,43 +14,36 @@ GraphicObject* gl_input;
 
 int main(int argc, char **argv)
 {
-    // initiate freeglut and create window
-
 	// glewInit();
 
     // if (GLEW_OK != glewInit())
     // {
     //     // GLEW failed!
+    //     std::cout << "fail!";
     //     exit(1);
     // }
+
+    // assign global GraphicObject
     Graph testgraph;
-    testgraph.GenerateLFRGraph(100, 5, 50, 2, 5, 2, 0.8);
+    testgraph.GenerateLFRGraph(100, 5, 40, 2, 7, 1.5, 0.8);
     GraphicObject g(testgraph);
     gl_input = &g;
-    // assign global GraphicObject
 
+    // initialise freeglut and open window
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(320, 320);
     glutCreateWindow("GraphMaker");
 
-    // Enable alpha blending
-    
+    // enable alpha blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable( GL_BLEND );
 
-    // Init();
-
-    
-    //testgraph.adjacency_matrix->Print();
-
     // register callbacks
-
     glutDisplayFunc(Render);
 
     // enter the processing loop
-
     glutMainLoop();
 
     return 0;
@@ -59,9 +52,7 @@ int main(int argc, char **argv)
 void Render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPointSize(5);
     glLineWidth(2);
-
     float*& VAO = gl_input->vertex_array;
 
     // render vertices as circles
@@ -69,13 +60,13 @@ void Render()
     for (unsigned int i = 0; i < gl_input->n_vertices; ++i)
     {   
         unsigned int vertex_ptr = i * 7;
-        glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], VAO[vertex_ptr + 6]);
-    //    glVertex3f(VAO[vertex_ptr], VAO[vertex_ptr + 1], VAO[vertex_ptr + 2]);
-        DrawCircle(VAO[vertex_ptr], VAO[vertex_ptr + 1], 0.02);
+        glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], 0.6f);
+        DrawCircle(VAO[vertex_ptr], VAO[vertex_ptr + 1], 0.02, true);
+        glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], 1.0f);
+        DrawCircle(VAO[vertex_ptr], VAO[vertex_ptr + 1], 0.02, false);
     }
 
     // render edges as lines
-
     glBegin(GL_LINES);
     for (unsigned int i = 0; i < gl_input->n_indices; ++i)
     {   
@@ -88,10 +79,10 @@ void Render()
 	glutSwapBuffers();
 }
 
-void DrawCircle(float origin_x, float origin_y, float radius)
+void DrawCircle(float origin_x, float origin_y, float radius, bool filled)
 {
-    glBegin(GL_LINE_LOOP);
-    for (float i = 0; i < 2 * pi; i += 1 / 8.0f)
+    glBegin(filled ? GL_TRIANGLE_FAN : GL_LINE_LOOP);
+    for (float i = 0; i < 2 * pi; i += 1 / 20.0f)
     {
         glVertex2f(radius * std::cos(i) + origin_x, radius * std::sin(i) + origin_y);
     }

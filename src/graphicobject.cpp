@@ -28,10 +28,10 @@ void GraphicObject::WriteVertexClusters(const std::vector<unsigned int>& communi
 
     float pi = 3.141592f;
     const unsigned int n_communities = source_graph->n_communities;
-    const float global_radius = 0.5f;
+    const float global_radius = 0.6f;
     const float global_angular_increment = 2.0f * pi / (float)n_communities;
-    const float param1 = 1.5f;
-    const float param2 = 0.3f;
+    const float param1 = 1.0f;
+    const float param2 = 0.2f;
 
     // membership: N_communities x N_members
 
@@ -65,34 +65,33 @@ void GraphicObject::WriteColours(const std::vector<unsigned int>& communities)
 {
     const float& dimension = (float)source_graph->dimension;
     const unsigned int& n_communities = source_graph->n_communities;
+    const float colour_increment = 3.0f / dimension;
     float colour_mixer[3] = {1.0f, 1.0f, 0.0f};
-    unsigned int n_iters_t = 0;
-    unsigned int n_iters_c = 0;
+    unsigned int n_iters = 0;
 
     for (unsigned int i = 0; i < n_communities; ++i)
     {
-        if (n_iters_t <= dimension / 2)
+        // Vary colours in YMCK space
+        if (n_iters < dimension / 3)
         {
-           colour_mixer[0] = 1.0f - ((3 * n_iters_c) / dimension);
+           colour_mixer[0] = 1.0f - n_iters * colour_increment;
            colour_mixer[1] = 1.0f;
-           colour_mixer[2] = 0.0f + ((3 * n_iters_c) / dimension);
+           colour_mixer[2] = n_iters * colour_increment;
         }
 
-        else if (n_iters_t <= 2 * dimension / 3)
+        else if (n_iters < 2 * dimension / 3)
         {   
-           colour_mixer[0] = 0.0f + ((3 * n_iters_c) / (2 * dimension));
-           colour_mixer[1] = 1.0f - ((3 * n_iters_c) / (2 * dimension));
+           colour_mixer[0] = n_iters * colour_increment - 1.0f;
+           colour_mixer[1] = 2.0f - n_iters * colour_increment;
            colour_mixer[2] = 1.0f;
         }
 
         else
         {   
-           colour_mixer[0] = 1.0f + (n_iters_c / dimension);
-           colour_mixer[1] = 0.0f + (n_iters_c / dimension);
-           colour_mixer[2] = 1.0f;
+           colour_mixer[0] = 1.0f;
+           colour_mixer[1] = n_iters * colour_increment - 2.0f;
+           colour_mixer[2] = 3.0f - n_iters * colour_increment;
         }
-
-        n_iters_c = 0.0f;
 
         for (unsigned int j = 0; j < dimension; ++j)
         {
@@ -102,8 +101,7 @@ void GraphicObject::WriteColours(const std::vector<unsigned int>& communities)
                 vertex_array[7 * j + 4] = colour_mixer[1];
                 vertex_array[7 * j + 5] = colour_mixer[2];
                 vertex_array[7 * j + 6] = 1.0f;
-                ++n_iters_t;
-                ++n_iters_c;
+                ++n_iters;
             }
         }
     }
