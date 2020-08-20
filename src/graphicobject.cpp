@@ -28,10 +28,10 @@ void GraphicObject::WriteVertexClusters(const std::vector<unsigned int>& communi
 
     float pi = 3.141592f;
     const unsigned int n_communities = source_graph->n_communities;
-    const float global_radius = 0.25f;
+    const float global_radius = 0.5f;
     const float global_angular_increment = 2.0f * pi / (float)n_communities;
     const float param1 = 1.5f;
-    const float param2 = 0.2f;
+    const float param2 = 0.3f;
 
     // membership: N_communities x N_members
 
@@ -52,11 +52,11 @@ void GraphicObject::WriteVertexClusters(const std::vector<unsigned int>& communi
 
         for (unsigned int j = 0; j < membership[i].size(); ++j)
         {
-            const unsigned int v = membership[i][j];
+            const unsigned int vertex_ptr = membership[i][j];
             
-            vertex_array[v * 7] = (radius * std::sin(j * angular_increment)) + centre_x;
-            vertex_array[(v * 7) + 1] = (radius * std::cos(j * angular_increment)) + centre_y;
-            vertex_array[(v * 7) + 2] = 0.0f;
+            vertex_array[vertex_ptr * 7] = (radius * std::sin(j * angular_increment)) + centre_x;
+            vertex_array[(vertex_ptr * 7) + 1] = (radius * std::cos(j * angular_increment)) + centre_y;
+            vertex_array[(vertex_ptr * 7) + 2] = 0.0f;
         }
     }
 }
@@ -68,7 +68,7 @@ void GraphicObject::WriteColours(const std::vector<unsigned int>& communities)
     float colour_mixer[3] = {1.0f, 1.0f, 0.0f};
     unsigned int n_iters_t = 0;
     unsigned int n_iters_c = 0;
-    
+
     for (unsigned int i = 0; i < n_communities; ++i)
     {
         if (n_iters_t <= dimension / 2)

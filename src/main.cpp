@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     //     exit(1);
     // }
     Graph testgraph;
-    testgraph.GenerateLFRGraph(40, 5, 10, 2, 3, 2, 0.8);
+    testgraph.GenerateLFRGraph(100, 5, 50, 2, 5, 2, 0.8);
     GraphicObject g(testgraph);
     gl_input = &g;
     // assign global GraphicObject
@@ -36,6 +36,11 @@ int main(int argc, char **argv)
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(320, 320);
     glutCreateWindow("GraphMaker");
+
+    // Enable alpha blending
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable( GL_BLEND );
 
     // Init();
 
@@ -57,22 +62,27 @@ void Render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPointSize(5);
+    glLineWidth(2);
 
     float*& VAO = gl_input->vertex_array;
 
     glBegin(GL_POINTS);
     for (unsigned int i = 0; i < gl_input->n_vertices; ++i)
     {   
-        unsigned int vertex = i * 7;
-        glColor4f(VAO[vertex + 3], VAO[vertex + 4], VAO[vertex + 5], VAO[vertex + 6]);
-        glVertex3f(VAO[vertex], VAO[vertex + 1], VAO[vertex + 2]);
+        unsigned int vertex_ptr = i * 7;
+        glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], VAO[vertex_ptr + 6]);
+        glVertex3f(VAO[vertex_ptr], VAO[vertex_ptr + 1], VAO[vertex_ptr + 2]);
     }
-
-    // glVertex3f(-0.5,-0.5,0.0);
-	// glVertex3f(0.5,0.0,0.0);
-	// glVertex3f(0.0,0.5,0.0);
-
 	glEnd();
+
+    glBegin(GL_LINES);
+    for (unsigned int i = 0; i < gl_input->n_indices; ++i)
+    {   
+        unsigned int vertex_ptr = gl_input->index_array[i] * 7;
+        glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], 0.3f);
+        glVertex3f(VAO[vertex_ptr], VAO[vertex_ptr + 1], VAO[vertex_ptr + 2]);
+    }
+    glEnd();
 
 	glutSwapBuffers();
 }
