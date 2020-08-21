@@ -65,8 +65,8 @@ void Graph::GenerateLFRGraph(unsigned int dim,
         int k = (int)pow(Ddist(rd), -a);
         int c = (int)pow(Cdist(rd), b);
         available_vertices[i][0] = i;
-        available_vertices[i][1] = k * mixing_parameter;
-        available_vertices[i][2] = k * (1 - mixing_parameter);
+        available_vertices[i][1] = (unsigned int)((float)k * mixing_parameter);
+        available_vertices[i][2] = k - available_vertices[i][1];
         (*true_communities)[i] = c;
     }
 
@@ -78,6 +78,7 @@ void Graph::GenerateLFRGraph(unsigned int dim,
         unsigned int index_1 = 0;
         unsigned int index_2 = 0;
 
+        
         while (index_1 == index_2)
         {
             index_1 = rand() % available_vertices.size();
@@ -86,22 +87,25 @@ void Graph::GenerateLFRGraph(unsigned int dim,
 
         unsigned int vertex_1 = available_vertices[index_1][0];
         unsigned int vertex_2 = available_vertices[index_2][0];
+        unsigned int& av_1 = available_vertices[index_1][0];
+        unsigned int& av_2 = available_vertices[index_1][1];
+        unsigned int& av_3 = available_vertices[index_1][2];
+
         unsigned int valent_index = 2;
 
         if (n_iters > dimension)
         {
+            unsigned int n_iters_2 = 0;
+
             for (unsigned int i = 0; i < available_vertices[index_1][1] + available_vertices[index_1][2]; ++i)
             {   
-                start:
-                unsigned int n_iters_2 = 0;
-
+                std::cout << "i: " << i << std::endl;
                 while (vertex_1 == vertex_2 || adjacency_matrix->IsAdjacent(vertex_1, vertex_2))
                 {
                     if (n_iters_2 > dimension)
                     {
                         std::cout << "Vertex " << vertex_1 << " is saturated; skipping" << std::endl;
-                        ++i;
-                        goto start; 
+                        goto end;
                     }
 
                     vertex_2 = rand() % dimension;
@@ -112,12 +116,11 @@ void Graph::GenerateLFRGraph(unsigned int dim,
 
                 adjacency_matrix->AddConnection(vertex_1, vertex_2, 1);
                 adjacency_matrix->AddConnection(vertex_2, vertex_1, 1);
-                ++(*degree)[vertex_1];
-                ++(*degree)[vertex_2];
+            }
+                end:
                 available_vertices.erase(available_vertices.cbegin() + index_1);
                 n_iters_2 = 0;
                 continue;
-            }
         }
 
         if ((*true_communities)[vertex_1] == (*true_communities)[vertex_2])
@@ -126,13 +129,11 @@ void Graph::GenerateLFRGraph(unsigned int dim,
         }
 
         if (available_vertices[index_1][valent_index] > 0 &&
-            available_vertices[index_1][valent_index] > 0 &&
+            available_vertices[index_2][valent_index] > 0 &&
             !adjacency_matrix->IsAdjacent(vertex_1, vertex_2))
         {
             adjacency_matrix->AddConnection(vertex_1, vertex_2, 1);
             adjacency_matrix->AddConnection(vertex_2, vertex_1, 1);
-            ++(*degree)[vertex_1];
-            ++(*degree)[vertex_2];
             --available_vertices[index_1][valent_index];
             --available_vertices[index_2][valent_index];
 
@@ -390,6 +391,7 @@ void Graph::GetDegree()
 
     for (unsigned int i = 0; i < dimension; ++i)
     {
+        (*degree)[i] = adjacency_matrix->GetDegree(i);
         if ((*degree)[i] > max_degree)
         {
             max_degree = (*degree)[i];

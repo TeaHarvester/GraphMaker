@@ -17,6 +17,7 @@ struct SparseMatrix
     bool IsAdjacent(const unsigned int vertex1, const unsigned int vertex2);
     void AddConnection(const unsigned int row, const unsigned int column, float value);
     float GetEdgeWeight(unsigned int vertex_1, unsigned int vertex_2);
+    unsigned int GetDegree(unsigned int vertex);
     void Print();
     SparseMatrix(unsigned int dim);
 };

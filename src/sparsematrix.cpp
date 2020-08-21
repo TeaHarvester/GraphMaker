@@ -91,6 +91,14 @@ float SparseMatrix::GetEdgeWeight(unsigned int vertex_1, unsigned int vertex_2)
     return 0.0f;
 } 
 
+unsigned int SparseMatrix::GetDegree(unsigned int vertex)
+{
+    unsigned int n_iters = 0;
+    std::vector<unsigned int> adjacent_vertices = GetAdjacentVertices(vertex);
+
+    return adjacent_vertices.size();
+}
+
 void SparseMatrix::Print()
 {
     std::cout << "i j v q" << std::endl;
