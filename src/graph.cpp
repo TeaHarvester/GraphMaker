@@ -51,6 +51,13 @@ void Graph::GenerateLFRGraph(unsigned int dim,
 
     true_communities = new std::vector<unsigned int>(dimension);
 
+    if (detected_communities != NULL)
+    {
+        delete detected_communities;
+    }
+
+    detected_communities = new std::vector<unsigned int>(dimension); 
+
     float x_min = pow(float(k_min),-1/a);
     float x_max = pow(float(k_max),-1/a);
     float c_min = 0;
@@ -87,9 +94,6 @@ void Graph::GenerateLFRGraph(unsigned int dim,
 
         unsigned int vertex_1 = available_vertices[index_1][0];
         unsigned int vertex_2 = available_vertices[index_2][0];
-        unsigned int& av_1 = available_vertices[index_1][0];
-        unsigned int& av_2 = available_vertices[index_1][1];
-        unsigned int& av_3 = available_vertices[index_1][2];
 
         unsigned int valent_index = 2;
 
@@ -99,7 +103,6 @@ void Graph::GenerateLFRGraph(unsigned int dim,
 
             for (unsigned int i = 0; i < available_vertices[index_1][1] + available_vertices[index_1][2]; ++i)
             {   
-                std::cout << "i: " << i << std::endl;
                 while (vertex_1 == vertex_2 || adjacency_matrix->IsAdjacent(vertex_1, vertex_2))
                 {
                     if (n_iters_2 > dimension)
@@ -160,74 +163,77 @@ void Graph::GenerateLFRGraph(unsigned int dim,
     }
 
     n_edges = adjacency_matrix->GetEdges().size();
+
+    detected_communities = new std::vector<unsigned int>(dimension);
+	n_comm_detected = dimension;
+
+    for (unsigned int i = 0; i < dimension; ++i)
+    {
+        (*detected_communities)[i] = i;
+    }
+
     GetDegree();
 }
 
 void Graph::Louvain(Graph& G, unsigned int recur_counter)
-{
-	if (recur_counter == 0)
-	{
-		if (detected_communities != NULL)
-		{
-			delete detected_communities;
-		}
+{   
+    Graph* tmp_graph = new Graph(G);
 
-		detected_communities = new std::vector<unsigned int>(dimension);
-		n_comm_detected = dimension;
+    if (recur_counter > 0)
+    {
+        delete &G;
+    }
 
-		for (unsigned int i = 0; i < dimension; ++i)
-		{
-			(*detected_communities)[i] = i;
-		}
-	}
+    else
+    {
+        std::cout << std::endl << "running Louvain community detection: " << std::endl;
+    }
+    
 
     bool optimal_partition = false;
 	unsigned int optim_iter = 0;
-	
+
 	while (optimal_partition == false)
 	{
-		optimal_partition = LouvainOptimise(G);
+        std::cout << "partitioning... " << std::endl;
+		optimal_partition = LouvainOptimise(*tmp_graph);
 		++optim_iter;
-		std::cout << std::endl << "partitioning... ";
 	}
-
-	for (unsigned int i = 0; i < this->dimension; ++i)
-	{
-		for (unsigned int j = 0; j < G.dimension; ++j)
-		{
-			if ((*this->detected_communities)[i] == j)
-			{
-				this->detected_communities[i] = G.detected_communities[j];
-				break;
-			}
-		}
-	}
-
-    this->n_comm_detected = G.n_comm_detected;
-
-    Graph aggregate_graph = LouvainAggregate(G);
     
-	std::cout << std::endl << std::endl << "aggregating... ";
+    for (unsigned int i = 0; i < this->dimension; ++i)
+    {
+        for (unsigned int j = 0; j < tmp_graph->dimension; ++j)
+        {
+            if ((*(this->detected_communities))[i] == j)
+            {
+                (*(this->detected_communities))[i] = (*(tmp_graph->detected_communities))[j];
 
-	if (recur_counter > 0)
-	{
-        G.~Graph();
-	}
+                break;
+            }
+        }
+    }
+
+    n_comm_detected = tmp_graph->n_comm_detected;
+
+    std::cout << std::endl << "aggregating... " << std::endl;
+    Graph* aggregate_graph = LouvainAggregate(*tmp_graph);
+
+    delete &tmp_graph;
 
 	if (optim_iter > 1)
 	{
-		Louvain(aggregate_graph, recur_counter + 1);
+		Louvain(*aggregate_graph, recur_counter + 1);
 	}
 
 	else
 	{
-		std::cout << std::endl << "number of communities detected: " << n_comm_detected;
+		std::cout << std::endl << "number of communities detected: " << n_comm_detected << std::endl;
 	}
 }
 
-bool Graph::LouvainOptimise(Graph& G)
+bool Graph::LouvainOptimise(Graph& tmp_graph)
 {
-	std::vector<unsigned int> community_sizes(G.n_comm_detected);
+	std::vector<unsigned int> community_sizes(tmp_graph.n_comm_detected);
 	bool maximum_modularity = true;
 	// Q: is modularity;
     // delta_Q: difference in Q after assigning a node to a community
@@ -236,28 +242,28 @@ bool Graph::LouvainOptimise(Graph& G)
 	unsigned int optimal_community;
 
 	// Records the size of each community
-	for (unsigned int i = 0; i < G.n_comm_detected; ++i)
+	for (unsigned int i = 0; i < tmp_graph.n_comm_detected; ++i)
 	{
 		unsigned int iter = 0;
 
-		for (unsigned int j = 0; j < G.dimension; ++j)
+		for (unsigned int j = 0; j < tmp_graph.dimension; ++j)
 		{
-			if ((*G.detected_communities)[j] == i)
+			if ((*tmp_graph.detected_communities)[j] == i)
 			{
 				++iter;
-			}
+        	}
 			
 			community_sizes[i] = iter;
 		}
 	}
 
-	for (unsigned int i = 0; i < G.dimension; ++i)
+	for (unsigned int i = 0; i < tmp_graph.dimension; ++i)
 	{
 		delta_Q_max = 0;
 
-		for (unsigned int j = 0; j < G.n_comm_detected; ++j)
+		for (unsigned int j = 0; j < tmp_graph.n_comm_detected; ++j)
 		{
-			delta_Q = LouvainGetModularity(G, i, j);
+			delta_Q = LouvainGetModularity(tmp_graph, i, j);
 
 			if (delta_Q > delta_Q_max)
 			{
@@ -268,57 +274,58 @@ bool Graph::LouvainOptimise(Graph& G)
 
 		if (delta_Q_max > 0)
 		{
-			unsigned int drained_community = (*G.detected_communities)[i];
+			unsigned int drained_community = (*tmp_graph.detected_communities)[i];
 
-			(*G.detected_communities)[i] = optimal_community;
+			(*tmp_graph.detected_communities)[i] = optimal_community;
 			++community_sizes[optimal_community];
 			--community_sizes[drained_community];
 
 			if (community_sizes[drained_community] == 0)
 			{
 				community_sizes.erase(community_sizes.cbegin() + drained_community);
-				--G.n_comm_detected;
+				--tmp_graph.n_comm_detected;
 
-				for (unsigned int j = 0; j < G.dimension; ++j)
+				for (unsigned int j = 0; j < tmp_graph.dimension; ++j)
 				{
-					if ((*G.detected_communities)[j] > drained_community)
+					if ((*tmp_graph.detected_communities)[j] > drained_community)
 					{
-						--(*G.detected_communities)[j];
+						--(*tmp_graph.detected_communities)[j];
 					}
 				}
+
 				maximum_modularity = false;
-			}
+            }
 		}
 	}
 
 	return maximum_modularity;
 }
 
-float Graph::LouvainGetModularity(Graph &G, unsigned int vertex_1, unsigned int community)
+float Graph::LouvainGetModularity(Graph& tmp_graph, unsigned int vertex_1, unsigned int community)
 {
     // Change in modularity moving vertex_i into community c
 	// delta_Q = (k_i_c / two_m) - (sigma_total * k_i / 2 * m ^ 2)
 
 	float m = 0;
 	float k_i_c = 0;
-	float k_i = (float)(*G.degree)[vertex_1];
+	float k_i = (float)(*tmp_graph.degree)[vertex_1];
 	float sigma_in = 0;
 	float sigma_total = 0;
 	float sigma_total_in = 0;
 	float sigma_total_out = 0;
 	int c_size = 0;
 
-	for (unsigned int i = 0; i < G.dimension; ++i)
+	for (unsigned int i = 0; i < tmp_graph.dimension; ++i)
 	{
-		if ((*G.detected_communities)[i] == community)
+		if ((*tmp_graph.detected_communities)[i] == community)
 		{
 			++c_size;
-			k_i_c += G.adjacency_matrix->GetEdgeWeight(vertex_1, i);
+			k_i_c += tmp_graph.adjacency_matrix->GetEdgeWeight(vertex_1, i);
 		}
 
-		for (unsigned int j = 0; j < G.dimension; ++j)
+		for (unsigned int j = 0; j < tmp_graph.dimension; ++j)
 		{
-            float edge_weight = G.adjacency_matrix->GetEdgeWeight(i, j);
+            float edge_weight = tmp_graph.adjacency_matrix->GetEdgeWeight(i, j);
 
 			if (j < i)
 			{
@@ -335,13 +342,13 @@ float Graph::LouvainGetModularity(Graph &G, unsigned int vertex_1, unsigned int 
 				m += edge_weight;
 			}
 
-			if ((*G.detected_communities)[i] == community)
+			if ((*tmp_graph.detected_communities)[i] == community)
 			{
 				sigma_total += edge_weight;
 				sigma_total_out += edge_weight;
 				sigma_total_in += edge_weight;
 
-				if ((*G.detected_communities)[j] == community)
+				if ((*tmp_graph.detected_communities)[j] == community)
 				{
 					sigma_in += edge_weight;
 				}
@@ -352,32 +359,22 @@ float Graph::LouvainGetModularity(Graph &G, unsigned int vertex_1, unsigned int 
 	return (k_i_c / (2.0f * m)) - ((sigma_total * k_i) / (2.0f * pow(m, 2.0f)));
 }
 
-Graph Graph::LouvainAggregate(Graph& G)
+Graph* Graph::LouvainAggregate(Graph& tmp_graph)
 {
-    unsigned int new_dimension = G.n_comm_detected;
+    unsigned int new_dimension = tmp_graph.n_comm_detected;
 	SparseMatrix aggregate(new_dimension);
 
-	for (unsigned int i = 0; i < G.dimension; ++i)
+	for (unsigned int i = 0; i < tmp_graph.dimension; ++i)
 	{
-		for (unsigned int j = 0; j < G.dimension; ++j)
+		for (unsigned int j = 0; j < tmp_graph.dimension; ++j)
 		{
-			//w_new[communities[i]][communities[j]] += w[i][j];
-            unsigned int vertex_1 = (*G.detected_communities)[i];
-            unsigned int vertex_2 = (*G.detected_communities)[j];
-            aggregate.AddConnection(vertex_1, vertex_2, G.adjacency_matrix->GetEdgeWeight(i, j));
+            unsigned int vertex_1 = (*tmp_graph.detected_communities)[i];
+            unsigned int vertex_2 = (*tmp_graph.detected_communities)[j];
+            aggregate.AddConnection(vertex_1, vertex_2, tmp_graph.adjacency_matrix->GetEdgeWeight(i, j));
 		}
 	}
 
-	for (unsigned int i = 0; i < new_dimension; ++i)
-	{
-		(*G.detected_communities)[i] = i;
-        G.detected_communities->pop_back();
-	}
-
-    SparseMatrix* S;
-    S = &aggregate;
-
-	return Graph(S);
+	return new Graph(aggregate);
 }
 
 void Graph::GetDegree()
@@ -413,18 +410,52 @@ detected_communities(NULL)
     adjacency_matrix = NULL;
 }
 
-Graph::Graph(SparseMatrix*& M)
+Graph::Graph(const SparseMatrix& S)
 :
-adjacency_matrix(M),
-dimension(M->dimension),
-n_edges(M->col.size()),
+dimension(S.dimension),
+n_edges(S.col.size()),
 n_communities(0),
-n_comm_detected(0),
+n_comm_detected(S.dimension),
 max_degree(0),
 degree(NULL),
 true_communities(NULL),
 detected_communities(NULL)
 {
+    adjacency_matrix = new SparseMatrix(S);
+	n_comm_detected = dimension;
+    detected_communities = new std::vector<unsigned int>(dimension);
+
+    for (unsigned int i = 0; i < dimension; ++i)
+    {
+        (*detected_communities)[i] = i;
+    }
+
+    GetDegree();
+}
+
+Graph::Graph(const Graph& G)
+:
+dimension(G.dimension),
+n_edges(G.adjacency_matrix->col.size()),
+n_communities(G.n_communities),
+n_comm_detected(G.n_comm_detected),
+max_degree(0),
+degree(NULL),
+true_communities(NULL),
+detected_communities(NULL)
+{
+    adjacency_matrix = new SparseMatrix(*G.adjacency_matrix);
+
+    if (G.true_communities != NULL)
+    {
+        true_communities = new std::vector<unsigned int>(*G.true_communities);
+    }
+
+    if (G.detected_communities != NULL)
+    {
+        detected_communities = new std::vector<unsigned int>(*G.detected_communities);
+    }
+
     GetDegree();
 }
 

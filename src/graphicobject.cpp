@@ -8,17 +8,21 @@ void GraphicObject::Init()
     n_vertices = source_graph->dimension;
     n_indices = source_graph->n_edges * 2;
 
+    std::vector<unsigned int>& true_communities = *source_graph->true_communities;
+    std::vector<unsigned int>& detected_communities = *source_graph->detected_communities;
+    const unsigned int& n_communities = source_graph->n_communities;
+    const unsigned int& n_comm_detected = source_graph->n_comm_detected;
+ 
+
     vertex_array = new float[n_vertices * 7];
     index_array = new unsigned int[n_indices * 2];
 
-    const std::vector<unsigned int>& communities = *(source_graph->true_communities);
-
-    WriteVertexClusters(communities);
-    WriteColours(communities);
+    WriteVertexRings(detected_communities, n_comm_detected);
+    WriteColours(true_communities, n_communities);
     WriteIndexArray();
 }
 
-void GraphicObject::WriteVertexClusters(const std::vector<unsigned int>& communities)
+void GraphicObject::WriteVertexRings(const std::vector<unsigned int>& communities, unsigned int n_communities)
 {
     // arrange communities in an outer circle around the origin
     // arrange vertices in a circle within their respective communities
@@ -27,7 +31,6 @@ void GraphicObject::WriteVertexClusters(const std::vector<unsigned int>& communi
     // param2: lower_bound of community radius
 
     float pi = 3.141592f;
-    const unsigned int n_communities = source_graph->n_communities;
     const float global_radius = 0.55f;
     const float global_angular_increment = 2.0f * pi / (float)n_communities;
     const float param1 = 1.0f;
@@ -53,7 +56,6 @@ void GraphicObject::WriteVertexClusters(const std::vector<unsigned int>& communi
         for (unsigned int j = 0; j < membership[i].size(); ++j)
         {
             const unsigned int vertex_ptr = membership[i][j];
-            
             vertex_array[vertex_ptr * 7] = (radius * std::sin(j * angular_increment)) + centre_x;
             vertex_array[(vertex_ptr * 7) + 1] = (radius * std::cos(j * angular_increment)) + centre_y;
             vertex_array[(vertex_ptr * 7) + 2] = 0.0f;
@@ -61,10 +63,9 @@ void GraphicObject::WriteVertexClusters(const std::vector<unsigned int>& communi
     }
 }
 
-void GraphicObject::WriteColours(const std::vector<unsigned int>& communities)
+void GraphicObject::WriteColours(const std::vector<unsigned int>& communities, unsigned int n_communities)
 {
     const float& dimension = (float)source_graph->dimension;
-    const unsigned int& n_communities = source_graph->n_communities;
     const float colour_increment = 3.0f / dimension;
     float colour_mixer[3] = {1.0f, 1.0f, 0.0f};
     unsigned int n_iters = 0;

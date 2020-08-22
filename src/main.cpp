@@ -25,8 +25,8 @@ int main(int argc, char **argv)
 
     // assign global GraphicObject
     Graph testgraph;
-    testgraph.GenerateLFRGraph(167, 10, 30, 2.5, 7, 1.7, 0.8);
-    //testgraph.Louvain(testgraph, 0);
+    testgraph.GenerateLFRGraph(100, 4, 40, 2.5, 7, 2.5, 0.8);
+    testgraph.Louvain(testgraph, 0);
     GraphicObject g(testgraph);
     gl_input = &g;
 
@@ -50,13 +50,14 @@ int main(int argc, char **argv)
     return 0;
 }
 
+// a_max = pi r_max^2
+// r_max = sqrt (a_max / pi)
+
 void Render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLineWidth(2);
-    float min_vertex_size = 0.001f;
-    float max_vertex_size = 0.01f;
-    float vs_range = max_vertex_size - min_vertex_size;
+    float max_vertex_area = 0.06f;
     const unsigned int& max_degree = gl_input->source_graph->max_degree;
     const std::vector<unsigned int>& degree = *gl_input->source_graph->degree;
 
@@ -67,7 +68,7 @@ void Render()
     for (unsigned int i = 0; i < gl_input->n_vertices; ++i)
     {   
         unsigned int vertex_ptr = i * 7;
-        float radius = std::sqrt((((float)degree[i] / (float)max_degree)) * vs_range);
+        float radius = (((float)degree[i] / (float)max_degree) * max_vertex_area) + 0.01f;
         glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], 0.6f);
         DrawCircle(VAO[vertex_ptr], VAO[vertex_ptr + 1], radius, true);
         glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], 1.0f);

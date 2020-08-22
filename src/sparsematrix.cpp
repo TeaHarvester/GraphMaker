@@ -3,6 +3,26 @@
 
 void SparseMatrix::AddConnection(unsigned int row, unsigned int column, float value)
 {
+    if (value == 0)
+    {
+        return;
+    }
+
+    else if (IsAdjacent(row, column))
+    {
+        unsigned int adjacent_ptr = rowptr[row];
+        unsigned int n_adjacent = rowptr[row + 1] - adjacent_ptr;
+
+        for (unsigned int i = adjacent_ptr; i < adjacent_ptr + n_adjacent; ++i)
+        {
+            if (col[i] == column)
+            {
+                ++val[i];
+                return;
+            }
+        }
+    }
+
     unsigned int element_counter = 0;
 
     for (unsigned int i = 0; i < row; ++i)
@@ -93,7 +113,6 @@ float SparseMatrix::GetEdgeWeight(unsigned int vertex_1, unsigned int vertex_2)
 
 unsigned int SparseMatrix::GetDegree(unsigned int vertex)
 {
-    unsigned int n_iters = 0;
     std::vector<unsigned int> adjacent_vertices = GetAdjacentVertices(vertex);
 
     return adjacent_vertices.size();
@@ -137,4 +156,12 @@ dimension(dim),
 val(),
 col(),
 rowptr(dim + 1, 0)
+{}
+
+SparseMatrix::SparseMatrix(const SparseMatrix& S) 
+:
+dimension(S.dimension),
+val(S.val),
+col(S.col),
+rowptr(S.rowptr)
 {}

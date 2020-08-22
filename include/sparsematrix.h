@@ -20,6 +20,7 @@ struct SparseMatrix
     unsigned int GetDegree(unsigned int vertex);
     void Print();
     SparseMatrix(unsigned int dim);
+    SparseMatrix(const SparseMatrix& S);
 };
 
 #endif

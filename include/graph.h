@@ -27,14 +27,15 @@ class Graph
     // detect communities using Louvain algorithm
     void Louvain(Graph& G, unsigned int recur_counter);
     private:
-    bool LouvainOptimise(Graph& G);
-    float LouvainGetModularity(Graph &G, unsigned int vertex_1, unsigned int community);
-    Graph LouvainAggregate(Graph& G);
+    bool LouvainOptimise(Graph& tmp_graph);
+    float LouvainGetModularity(Graph&tmp_graph, unsigned int vertex_1, unsigned int community);
+    Graph* LouvainAggregate(Graph& tmp_graph);
     void GetDegree();
 
     public:
     Graph();
-    Graph(SparseMatrix*& M);
+    Graph(const SparseMatrix& S);
+    Graph(const Graph& G);
     ~Graph();
 };
 

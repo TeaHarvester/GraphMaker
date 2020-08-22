@@ -20,8 +20,8 @@ class GraphicObject
     void Init();
 
     private:
-    void WriteVertexClusters(const std::vector<unsigned int>& communities);
-    void WriteColours(const std::vector<unsigned int>& communities);
+    void WriteVertexRings(const std::vector<unsigned int>& communities, unsigned int n_com);
+    void WriteColours(const std::vector<unsigned int>& communities, unsigned int n_com);
     void WriteIndexArray();
 
     public:
