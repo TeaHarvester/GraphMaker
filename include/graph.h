@@ -26,6 +26,9 @@ class Graph
 
     // detect communities using Louvain algorithm
     void Louvain(Graph& G, unsigned int recur_counter);
+    float GetMixingParameter(bool ground_truth);
+    float GetMixingParameter(bool ground_truth, unsigned int c);
+
     private:
     bool LouvainOptimise(Graph& tmp_graph);
     float LouvainGetModularity(Graph&tmp_graph, unsigned int vertex_1, unsigned int community);

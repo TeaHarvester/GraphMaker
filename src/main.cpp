@@ -27,6 +27,8 @@ int main(int argc, char **argv)
     Graph testgraph;
     testgraph.GenerateLFRGraph(100, 4, 40, 2.5, 7, 2.5, 0.8);
     testgraph.Louvain(testgraph, 0);
+    testgraph.GetMixingParameter(true);
+    testgraph.GetMixingParameter(false);
     GraphicObject g(testgraph);
     gl_input = &g;
 

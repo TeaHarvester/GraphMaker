@@ -228,6 +228,7 @@ void Graph::Louvain(Graph& G, unsigned int recur_counter)
 	else
 	{
 		std::cout << std::endl << "number of communities detected: " << n_comm_detected << std::endl;
+        GetMixingParameter(false);
 	}
 }
 
@@ -394,6 +395,82 @@ void Graph::GetDegree()
             max_degree = (*degree)[i];
         }
     }
+}
+
+float Graph::GetMixingParameter(bool ground_truth)
+{
+    if (!degree)
+    {
+        GetDegree();
+    }
+
+    const std::vector<unsigned int>& communities = ground_truth ? *true_communities : *detected_communities;
+
+    float external_degree = 0.0f;
+    float total_degree = 0.0f;
+
+    for (unsigned int i = 0; i < dimension; ++i)
+    {
+        std::vector<unsigned int> adjacent_vertices = adjacency_matrix->GetAdjacentVertices(i);
+
+        for (unsigned int j = 0; j < adjacent_vertices.size(); ++j)
+        {
+            float edge_weight = adjacency_matrix->GetEdgeWeight(i, j);
+
+            if (communities[i] != communities[j])
+            {
+                external_degree += edge_weight;
+            }
+
+            total_degree += edge_weight;
+        }
+    }
+
+    std::cout << "mixing parameter (" << (ground_truth ? "ground truth" : "detected") << " communities: "
+    << external_degree / total_degree << std::endl;
+
+    return external_degree / total_degree;
+}
+
+float Graph::GetMixingParameter(bool ground_truth, unsigned int community)
+{
+    if (!degree)
+    {
+        GetDegree();
+    }
+
+    const std::vector<unsigned int>& communities = ground_truth ? *true_communities : *detected_communities;
+
+    float external_degree = 0.0f;
+    float total_degree = 0.0f;
+
+    for (unsigned int i = 0; i < dimension; ++i)
+    {
+
+        if (communities[i] != community)
+        {
+            continue;
+        }
+
+        std::vector<unsigned int> adjacent_vertices = adjacency_matrix->GetAdjacentVertices(i);
+
+        for (unsigned int j = 0; j < adjacent_vertices.size(); ++j)
+        {
+            float edge_weight = adjacency_matrix->GetEdgeWeight(i, j);
+
+            if (communities[i] != communities[j])
+            {
+                external_degree += edge_weight;
+            }
+
+            total_degree += edge_weight;
+        }
+    }
+
+    std::cout << "mixing parameter (" << (ground_truth ? "ground truth" : "detected") << " community "
+    << community << ": " << external_degree / total_degree << std::endl;
+
+    return external_degree / total_degree;
 }
 
 Graph::Graph()

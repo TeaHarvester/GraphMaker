@@ -9,13 +9,10 @@ struct SparseMatrix
     std::vector<unsigned int> col;
     std::vector<unsigned int> rowptr;
 
-    private: 
+    void AddConnection(const unsigned int row, const unsigned int column, float value);
     const std::vector<unsigned int> GetAdjacentVertices(const unsigned int vertex);
-
-    public:
     const std::vector<std::vector<unsigned int>> GetEdges();
     bool IsAdjacent(const unsigned int vertex1, const unsigned int vertex2);
-    void AddConnection(const unsigned int row, const unsigned int column, float value);
     float GetEdgeWeight(unsigned int vertex_1, unsigned int vertex_2);
     unsigned int GetDegree(unsigned int vertex);
     void Print();
