@@ -31,10 +31,8 @@ void GraphicObject::WriteVertexRings(const std::vector<unsigned int>& communitie
     // param2: lower_bound of community radius
 
     float pi = 3.141592f;
-    const float global_radius = 0.55f;
-    const float global_angular_increment = 2.0f * pi / (float)n_communities;
-    const float param1 = 1.0f;
-    const float param2 = 0.3f;
+    const float param1 = 0.8f;
+    const float param2 = 0.02f;
 
     // membership: N_communities x N_members
 
@@ -47,10 +45,12 @@ void GraphicObject::WriteVertexRings(const std::vector<unsigned int>& communitie
 
     for (unsigned int i = 0; i < n_communities; ++i)
     {
-
+        const float frac_coeff = (float)membership[i].size() / (float)source_graph->dimension;
+        const float global_radius = std::pow((1.0f - frac_coeff), 2.0f) * param1;
+        const float global_angular_increment = 2.0f * pi / (float)n_communities;
         const float centre_x = global_radius * std::sin(float(i) * global_angular_increment);
 		const float centre_y = global_radius * std::cos(float(i) * global_angular_increment);
-        const float radius = ((param1 * membership[i].size()) / (n_vertices * (float)n_communities)) + param2;
+        const float radius = std::pow(frac_coeff - param2, 0.5f) - param2;
         const float angular_increment = 2.0f * pi / membership[i].size();
 
         for (unsigned int j = 0; j < membership[i].size(); ++j)

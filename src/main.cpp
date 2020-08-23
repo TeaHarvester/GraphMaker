@@ -25,10 +25,10 @@ int main(int argc, char **argv)
 
     // assign global GraphicObject
     Graph testgraph;
-    testgraph.GenerateLFRGraph(100, 4, 40, 2.5, 7, 2.5, 0.8);
+    testgraph.GenerateLFRGraph(100, 4, 40, 2.5, 7, 2.0, 0.2);
     testgraph.Louvain(testgraph, 0);
-    testgraph.GetMixingParameter(true);
-    testgraph.GetMixingParameter(false);
+    //testgraph.GetMixingParameter(true);
+    //testgraph.GetMixingParameter(false);
     GraphicObject g(testgraph);
     gl_input = &g;
 
