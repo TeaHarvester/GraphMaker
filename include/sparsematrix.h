@@ -10,6 +10,7 @@ struct SparseMatrix
     std::vector<unsigned int> rowptr;
 
     void AddConnection(const unsigned int row, const unsigned int column, float value);
+    void EraseConnection(const unsigned int row, const unsigned int column);
     const std::vector<unsigned int> GetAdjacentVertices(const unsigned int vertex);
     const std::vector<std::vector<unsigned int>> GetEdges();
     bool IsAdjacent(const unsigned int vertex1, const unsigned int vertex2);

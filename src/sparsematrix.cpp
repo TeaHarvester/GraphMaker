@@ -8,7 +8,7 @@ void SparseMatrix::AddConnection(unsigned int row, unsigned int column, float va
         return;
     }
 
-    else if (IsAdjacent(row, column))
+    if (IsAdjacent(row, column))
     {
         unsigned int adjacent_ptr = rowptr[row];
         unsigned int n_adjacent = rowptr[row + 1] - adjacent_ptr;
@@ -23,24 +23,34 @@ void SparseMatrix::AddConnection(unsigned int row, unsigned int column, float va
         }
     }
 
-    unsigned int element_counter = 0;
-
-    for (unsigned int i = 0; i < row; ++i)
-    {
-        element_counter += rowptr[i + 1] - rowptr[i];
-    }
-
-    std::vector<unsigned int>::iterator col_iter;
-    col_iter = col.begin() + element_counter;
-    col.insert(col_iter, column);
-
-    std::vector<float>::iterator val_iter;
-    val_iter = val.begin() + element_counter; 
-    val.insert(val_iter, value);
+    col.insert(col.begin() + rowptr[row], column);
+    val.insert(val.begin() + rowptr[row], value);
 
     for (unsigned int i = row; i < dimension; ++i)
     {
         ++rowptr[i + 1];
+    }
+}
+
+void SparseMatrix::EraseConnection(const unsigned int row, const unsigned int column)
+{
+    if (!IsAdjacent(row, column))
+    {
+        std::cout << "no edge to erase" << std::endl;
+    }
+
+    for (unsigned int i = rowptr[row]; i < rowptr[row + 1]; ++i)
+    {
+        if (col[i] == column)
+        {
+            col.erase(col.begin() + i);
+            val.erase(val.begin() + i);
+        }
+    }
+
+    for (unsigned int i = row; i < dimension; ++i)
+    {
+        --rowptr[i + 1];
     }
 }
 

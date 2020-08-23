@@ -72,7 +72,7 @@ void Graph::GenerateLFRGraph(unsigned int dim,
         int k = (int)pow(Ddist(rd), -a);
         int c = (int)pow(Cdist(rd), b);
         available_vertices[i][0] = i;
-        available_vertices[i][1] = (unsigned int)((float)k * mixing_parameter);
+        available_vertices[i][1] = (unsigned int)((float)k * (1 - mixing_parameter));
         available_vertices[i][2] = k - available_vertices[i][1];
         (*true_communities)[i] = c;
     }
@@ -173,6 +173,317 @@ void Graph::GenerateLFRGraph(unsigned int dim,
     }
 
     GetDegree();
+    OptimiseLFRGraph(mixing_parameter);
+}
+
+void Graph::OptimiseLFRGraph(float target_mixing_parameter)
+{
+    std::vector<float> community_mix_params(n_communities);
+    float total_mixing_parameter =  GetMixingParameter(true);
+
+    while(true)
+    {
+        float deviation = target_mixing_parameter - total_mixing_parameter;
+        float sign_coeff = floor(deviation) == -1.0f ? -1.0f : 1.0f;
+        unsigned int stray_community;
+        float greatest_community_deviation = 0.0f;
+
+        for (unsigned int i = 0; i < n_communities; ++i)
+        {
+            community_mix_params[i] = GetMixingParameter(true, i);
+            if (std::pow(community_mix_params[i], -1.0f * sign_coeff) > greatest_community_deviation)
+            {
+                greatest_community_deviation = community_mix_params[i];
+                stray_community = i;
+            }
+        }
+
+        std::vector<float> pairwise_mix_params(n_communities);
+
+        unsigned int paired_community;
+        float greatest_pair_deviation = 0.0f;
+
+        for (unsigned int i = 0; i < n_communities; ++i)
+        {
+            if (i == stray_community)
+            {
+                continue;
+            }
+
+            pairwise_mix_params[i] = GetMixingParameter(true, stray_community, i);
+
+            if (std::pow(pairwise_mix_params[i], -1.0f * sign_coeff) > greatest_pair_deviation)
+            {
+                greatest_pair_deviation = pairwise_mix_params[i];
+                paired_community = i;
+            }
+        }
+
+        // select vertices to disconnect/reconnect
+
+        std::vector<unsigned int> stray_vertices = GetCommunityMembers(true, stray_community);
+        std::vector<unsigned int> paired_vertices = GetCommunityMembers(true, paired_community);
+        unsigned int stray_community_size = stray_vertices.size();
+        unsigned int paired_community_size = paired_vertices.size();
+        unsigned int s_vertex_1;
+        unsigned int s_vertex_2;
+        unsigned int p_vertex_1;
+        unsigned int p_vertex_2;
+
+        std::random_device rd;
+        std::uniform_int_distribution<> Sdist(0, stray_community_size - 1);
+        std::uniform_int_distribution<> Pdist(0, paired_community_size - 1);
+        bool s_chosen = false;
+        bool p_chosen = false;
+        unsigned int s_iters = 0;
+        unsigned int p_iters = 0;
+
+        while(!s_chosen || !p_chosen)
+        {
+            if (s_iters > dimension)
+            {
+                std::cout << "failed to rewire communities" << std::endl << std::endl;
+                return;
+            }
+
+            s_vertex_1 = stray_vertices[Sdist(rd)];
+            s_vertex_2 = stray_vertices[Sdist(rd)];
+
+            if (s_vertex_1 == s_vertex_2)
+            {
+                continue;
+            }
+
+            if ((sign_coeff == -1 && 
+                !adjacency_matrix->IsAdjacent(s_vertex_1, s_vertex_2)) ||
+                (sign_coeff == 1 && 
+                adjacency_matrix->IsAdjacent(s_vertex_1, s_vertex_2)))      
+            {
+                s_chosen = true;
+
+                while (!p_chosen)
+                {
+                    if (p_iters > dimension)
+                    {
+                        p_iters = 0;
+                        s_chosen = false;
+                        break;
+                    }
+
+                    p_vertex_1 = paired_vertices[Pdist(rd)];
+                    p_vertex_2 = paired_vertices[Pdist(rd)];
+
+                    if (p_vertex_1 == p_vertex_2)
+                    {
+                        continue;
+                    }
+
+                    if ((sign_coeff == -1 && 
+                        !adjacency_matrix->IsAdjacent(p_vertex_1, p_vertex_2)) ||
+                        (sign_coeff == 1 && 
+                        adjacency_matrix->IsAdjacent(p_vertex_1, p_vertex_2))) 
+                    {
+                        if ((sign_coeff == -1 && 
+                            adjacency_matrix->IsAdjacent(s_vertex_1, p_vertex_1) &&
+                            adjacency_matrix->IsAdjacent(s_vertex_2, p_vertex_2)) ||
+                            (sign_coeff == 1 && 
+                            !adjacency_matrix->IsAdjacent(s_vertex_1, p_vertex_1) &&
+                            !adjacency_matrix->IsAdjacent(s_vertex_1, p_vertex_2))) 
+                        {
+                            p_chosen = true;
+                            s_iters = 0;
+                            p_iters = 0;
+                        }
+
+                        else if ((sign_coeff == -1 && 
+                                    adjacency_matrix->IsAdjacent(s_vertex_1, p_vertex_2) &&
+                                    adjacency_matrix->IsAdjacent(s_vertex_2, p_vertex_1)) ||
+                                    (sign_coeff == 1 && 
+                                    !adjacency_matrix->IsAdjacent(s_vertex_1, p_vertex_2) &&
+                                    !adjacency_matrix->IsAdjacent(s_vertex_2, p_vertex_1))) 
+                        {
+                            unsigned int tmp_vertex = p_vertex_1;
+                            p_vertex_1 = p_vertex_2;
+                            p_vertex_2 = tmp_vertex;
+                            p_chosen = true;
+                            s_iters = 0;
+                            p_iters = 0;
+                        }
+                    }
+
+                ++p_iters;
+                }
+
+            }
+
+            ++s_iters;
+        }
+
+        if (sign_coeff == -1)
+        {
+            adjacency_matrix->EraseConnection(s_vertex_1, p_vertex_1);
+            adjacency_matrix->EraseConnection(s_vertex_2, p_vertex_2);
+            adjacency_matrix->AddConnection(s_vertex_1, s_vertex_2, 1.0f);
+            adjacency_matrix->AddConnection(p_vertex_1, p_vertex_2, 1.0f);
+        }
+
+        else
+        {
+            adjacency_matrix->EraseConnection(s_vertex_1, s_vertex_2);
+            adjacency_matrix->EraseConnection(p_vertex_1, p_vertex_2);
+            adjacency_matrix->AddConnection(s_vertex_1, p_vertex_1, 1.0f);
+            adjacency_matrix->AddConnection(s_vertex_2, p_vertex_2, 1.0f);
+        }
+
+        std::cout << "rewiring..." << std::endl << std::endl;
+
+        float new_mixing_parameter = GetMixingParameter(true);
+        
+        if (std::pow(target_mixing_parameter - new_mixing_parameter, 2.0f) > std::pow(deviation, 2.0f))
+        {
+            std::cout << "mixing parameter converged at " << new_mixing_parameter << std::endl << std::endl;
+            return;
+        }
+
+        total_mixing_parameter = new_mixing_parameter;
+    }
+}
+
+float Graph::GetMixingParameter(bool ground_truth)
+{
+    if (!degree)
+    {
+        GetDegree();
+    }
+
+    const std::vector<unsigned int>& communities = ground_truth ? *true_communities : *detected_communities;
+
+    float external_degree = 0.0f;
+    float total_degree = 0.0f;
+
+    for (unsigned int i = 0; i < dimension; ++i)
+    {
+        std::vector<unsigned int> adjacent_vertices = adjacency_matrix->GetAdjacentVertices(i);
+
+        for (unsigned int j = 0; j < adjacent_vertices.size(); ++j)
+        {
+            float edge_weight = adjacency_matrix->GetEdgeWeight(i, adjacent_vertices[j]);
+
+            if (communities[i] != communities[adjacent_vertices[j]])
+            {
+                external_degree += edge_weight;
+            }
+
+            total_degree += edge_weight;
+        }
+    }
+
+    std::cout << "mixing parameter (" << (ground_truth ? "ground truth)" : "detected)") << " communities: "
+    << external_degree / total_degree << std::endl;
+
+    return external_degree / total_degree;
+}
+
+float Graph::GetMixingParameter(bool ground_truth, unsigned int community)
+{
+    if (!degree)
+    {
+        GetDegree();
+    }
+
+    const std::vector<unsigned int>& communities = ground_truth ? *true_communities : *detected_communities;
+
+    float external_degree = 0.0f;
+    float total_degree = 0.0f;
+
+    std::vector<unsigned int> vertices = GetCommunityMembers(ground_truth, community);
+
+    for (unsigned int i = 0; i < vertices.size(); ++i)
+    {
+        std::vector<unsigned int> adjacent_vertices = adjacency_matrix->GetAdjacentVertices(vertices[i]);
+
+        for (unsigned int j = 0; j < adjacent_vertices.size(); ++j)
+        {
+            float edge_weight = adjacency_matrix->GetEdgeWeight(vertices[i], adjacent_vertices[j]);
+
+            if (communities[adjacent_vertices[j]] != community)
+            {
+                external_degree += edge_weight;
+            }
+
+            total_degree += edge_weight;
+        }
+    }
+    std::cout << "mixing parameter (" << (ground_truth ? "ground truth)" : "detected)") << " community "
+    << community << ": " << external_degree / total_degree << std::endl;
+
+    return external_degree / total_degree;
+}
+
+float Graph::GetMixingParameter(bool ground_truth, unsigned int community_1, unsigned int community_2)
+{
+    if (!degree)
+    {
+        GetDegree();
+    }
+
+    const std::vector<unsigned int>& communities = ground_truth ? *true_communities : *detected_communities;
+
+    float external_degree = 0.0f;
+    float total_degree = 0.0f;
+
+    std::vector<unsigned int> vertices = GetCommunityMembers(ground_truth, community_1);
+
+    for (unsigned int i = 0; i < vertices.size(); ++i)
+    {
+        std::vector<unsigned int> adjacent_vertices = adjacency_matrix->GetAdjacentVertices(vertices[i]);
+
+        for (unsigned int j = 0; j < adjacent_vertices.size(); ++j)
+        {
+            if (communities[adjacent_vertices[j]] != community_1 &&
+                communities[adjacent_vertices[j]] != community_2)
+            {
+                continue;
+            }
+
+            float edge_weight = adjacency_matrix->GetEdgeWeight(vertices[i], adjacent_vertices[j]);
+
+            if (communities[adjacent_vertices[j]] == community_2)
+            {
+                external_degree += edge_weight;
+            }
+
+            total_degree += edge_weight;
+        }
+    }
+
+    if (total_degree == 0.0f)
+    {
+        std::cout << "community " << community_1 << " is an isolate vertex" << std::endl;
+        return 1.0f;
+    }
+
+    std::cout << "mixing parameter (" << (ground_truth ? "ground truth)" : "detected)") << " community "
+    << community_1 << " with community " << community_2 << ": "
+    << external_degree / total_degree << std::endl;
+
+    return external_degree / total_degree;
+}
+
+std::vector<unsigned int> Graph::GetCommunityMembers(bool ground_truth, unsigned int community)
+{
+    const std::vector<unsigned int>& communities = ground_truth ? *true_communities : *detected_communities;
+    std::vector<unsigned int> members;
+
+    for (unsigned int i = 0; i < dimension; ++i)
+    {
+        if (communities[i] == community)
+        {
+            members.push_back(i);
+        }
+    }
+
+    return members;
 }
 
 void Graph::Louvain(Graph& G, unsigned int recur_counter)
@@ -395,82 +706,6 @@ void Graph::GetDegree()
             max_degree = (*degree)[i];
         }
     }
-}
-
-float Graph::GetMixingParameter(bool ground_truth)
-{
-    if (!degree)
-    {
-        GetDegree();
-    }
-
-    const std::vector<unsigned int>& communities = ground_truth ? *true_communities : *detected_communities;
-
-    float external_degree = 0.0f;
-    float total_degree = 0.0f;
-
-    for (unsigned int i = 0; i < dimension; ++i)
-    {
-        std::vector<unsigned int> adjacent_vertices = adjacency_matrix->GetAdjacentVertices(i);
-
-        for (unsigned int j = 0; j < adjacent_vertices.size(); ++j)
-        {
-            float edge_weight = adjacency_matrix->GetEdgeWeight(i, j);
-
-            if (communities[i] != communities[j])
-            {
-                external_degree += edge_weight;
-            }
-
-            total_degree += edge_weight;
-        }
-    }
-
-    std::cout << "mixing parameter (" << (ground_truth ? "ground truth" : "detected") << " communities: "
-    << external_degree / total_degree << std::endl;
-
-    return external_degree / total_degree;
-}
-
-float Graph::GetMixingParameter(bool ground_truth, unsigned int community)
-{
-    if (!degree)
-    {
-        GetDegree();
-    }
-
-    const std::vector<unsigned int>& communities = ground_truth ? *true_communities : *detected_communities;
-
-    float external_degree = 0.0f;
-    float total_degree = 0.0f;
-
-    for (unsigned int i = 0; i < dimension; ++i)
-    {
-
-        if (communities[i] != community)
-        {
-            continue;
-        }
-
-        std::vector<unsigned int> adjacent_vertices = adjacency_matrix->GetAdjacentVertices(i);
-
-        for (unsigned int j = 0; j < adjacent_vertices.size(); ++j)
-        {
-            float edge_weight = adjacency_matrix->GetEdgeWeight(i, j);
-
-            if (communities[i] != communities[j])
-            {
-                external_degree += edge_weight;
-            }
-
-            total_degree += edge_weight;
-        }
-    }
-
-    std::cout << "mixing parameter (" << (ground_truth ? "ground truth" : "detected") << " community "
-    << community << ": " << external_degree / total_degree << std::endl;
-
-    return external_degree / total_degree;
 }
 
 Graph::Graph()
