@@ -41,8 +41,6 @@ void SparseMatrix::EraseConnection(const unsigned int row, const unsigned int co
 
     for (unsigned int i = rowptr[row]; i < rowptr[row + 1]; ++i)
     {
-        std::cout << "column: " << col[i] << std::endl;
-
         if (col[i] == column)
         {
             col.erase(col.begin() + i);
