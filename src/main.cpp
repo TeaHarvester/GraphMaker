@@ -25,10 +25,8 @@ int main(int argc, char **argv)
 
     // assign global GraphicObject
     Graph testgraph;
-    testgraph.GenerateLFRGraph(100, 4, 40, 2.5, 7, 2.0, 0.2);
+    testgraph.GenerateLFRGraph(100, 2, 20, 2.5, 3, 2.0, 0.1);
     testgraph.Louvain(testgraph, 0);
-    //testgraph.GetMixingParameter(true);
-    //testgraph.GetMixingParameter(false);
     GraphicObject g(testgraph);
     gl_input = &g;
 
@@ -78,12 +76,12 @@ void Render()
     }
 
     // render edges as lines
-    glLineWidth(1);
+    glLineWidth(1.0);
     glBegin(GL_LINES);
     for (unsigned int i = 0; i < gl_input->n_indices; ++i)
     {   
         unsigned int vertex_ptr = gl_input->index_array[i] * 7;
-        glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], 0.3f);
+        glColor4f(VAO[vertex_ptr + 3], VAO[vertex_ptr + 4], VAO[vertex_ptr + 5], 0.2f);
         glVertex3f(VAO[vertex_ptr], VAO[vertex_ptr + 1], VAO[vertex_ptr + 2]);
     }
     glEnd();

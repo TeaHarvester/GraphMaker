@@ -17,8 +17,8 @@ void GraphicObject::Init()
     vertex_array = new float[n_vertices * 7];
     index_array = new unsigned int[n_indices * 2];
 
-    WriteVertexRings(true_communities, n_communities);
-    WriteColours(detected_communities, n_comm_detected);
+    WriteVertexRings(detected_communities, n_comm_detected);
+    WriteColours(true_communities, n_communities);
     WriteIndexArray();
 }
 
