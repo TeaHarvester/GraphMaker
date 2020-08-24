@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
     // assign global GraphicObject
     Graph testgraph;
-    testgraph.GenerateLFRGraph(100, 2, 20, 2.5, 3, 2.0, 0.1);
+    testgraph.GenerateLFRGraph(125, 8, 24, 2.5, 5, 2.0, 0.1);
     testgraph.Louvain(testgraph, 0);
     GraphicObject g(testgraph);
     gl_input = &g;

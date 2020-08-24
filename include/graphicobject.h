@@ -21,8 +21,10 @@ class GraphicObject
 
     private:
     void WriteVertexRings(const std::vector<unsigned int>& communities, unsigned int n_com);
+    void WriteVertexDynamics();
     void WriteColours(const std::vector<unsigned int>& communities, unsigned int n_com);
     void WriteIndexArray();
+    float VectorMagnitude(float i, float j);
 
     public:
     GraphicObject(const Graph& graph);
