@@ -33,6 +33,7 @@ main(int argc, char **argv)
 
 ```
 __Output Jazz band network:__ 
+
 ![](images/jazzbands.PNG)
 
 
