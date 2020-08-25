@@ -21,7 +21,7 @@ main(int argc, char **argv)
     Graph jazzgraph("graphs\\jazz.graph")
 
     // run community detection
-    jazzgraph.louvain(jazzgraph, 0)
+    jazzgraph.Louvain(jazzgraph, 0)
 
     // create GraphicObject to be used by Render()
     GraphicObject g(jazzgraph);
