@@ -1,6 +1,8 @@
 #include<iostream>
 #include<cmath>
 #include<random>
+#include <fstream>
+#include <sstream>
 #include "graph.h"
 
 void Graph::GenerateLFRGraph(unsigned int dim,
@@ -675,6 +677,81 @@ detected_communities(NULL)
     if (G.detected_communities != NULL)
     {
         detected_communities = new std::vector<unsigned int>(*G.detected_communities);
+    }
+
+    GetDegree();
+}
+
+Graph::Graph(std::string file_path)
+:
+dimension(0),
+n_edges(0),
+n_communities(0),
+max_degree(0),
+degree(NULL),
+true_communities(NULL),
+detected_communities(NULL)
+{
+    std::ifstream i_stream;
+
+	i_stream.open(file_path);
+
+	if (!i_stream) 
+    {
+		std::cerr << "Unable to open file datafile";
+		std::exit(1);   // call system to stop
+	}
+
+    std::string text_line;
+	int line_counter = -1;
+
+	while (std::getline(i_stream, text_line))
+	{
+		unsigned int char_counter = 0;
+		unsigned int datum;
+		std::string datum_str = "\0";
+
+		// Extract words from lines
+		while (char_counter < text_line.length())
+		{
+			// if character is not (space) or NULL, add character to 'word'
+			if (text_line[char_counter] != 32)
+			{
+				datum_str.push_back(text_line[char_counter]);
+				char_counter++;
+			}
+			
+			else if (text_line[char_counter] == 32)
+			{
+                std::stringstream(datum_str) >> datum;
+
+                if (line_counter == -1)
+                {
+                    dimension = datum;
+                    adjacency_matrix = new SparseMatrix(dimension);
+                    n_communities = dimension;
+                    n_comm_detected = dimension;
+                    break;
+                }
+
+				adjacency_matrix->AddConnection(line_counter, datum - 1, 1.0f);
+				datum_str = "\0";
+				++char_counter;
+			}
+		}
+
+		++line_counter;
+	}
+
+    n_edges = adjacency_matrix->GetEdges().size();
+
+    true_communities = new std::vector<unsigned int>(dimension);
+    detected_communities = new std::vector<unsigned int>(dimension);
+
+    for (unsigned int i = 0; i < dimension; ++i)
+    {
+        (*true_communities)[i] = i;
+        (*detected_communities)[i] = i;
     }
 
     GetDegree();

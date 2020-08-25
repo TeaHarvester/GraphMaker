@@ -24,10 +24,15 @@ int main(int argc, char **argv)
     // }
 
     // assign global GraphicObject
-    Graph testgraph;
-    testgraph.GenerateLFRGraph(125, 8, 24, 2.5, 5, 2.0, 0.1);
-    testgraph.Louvain(testgraph, 0);
-    GraphicObject g(testgraph);
+    // Graph testgraph;
+    // testgraph.GenerateLFRGraph(125, 8, 24, 2.5, 5, 2.0, 0.1);
+    // testgraph.Louvain(testgraph, 0);
+    // GraphicObject g(testgraph);
+
+    Graph jazzgraph("graphs\\jazz.graph");
+    jazzgraph.Louvain(jazzgraph, 0);
+    GraphicObject g(jazzgraph);
+
     gl_input = &g;
 
     // initialise freeglut and open window

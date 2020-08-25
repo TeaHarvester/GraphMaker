@@ -1,6 +1,7 @@
 #ifndef GRAPH
 #define GRAPH
 #include<vector>
+#include<string>
 #include "sparsematrix.h"
 
 class Graph
@@ -40,6 +41,7 @@ class Graph
     Graph();
     Graph(const SparseMatrix& S);
     Graph(const Graph& G);
+    Graph(std::string file_path);
     ~Graph();
 };
 

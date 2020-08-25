@@ -12,14 +12,13 @@ void GraphicObject::Init()
     std::vector<unsigned int>& detected_communities = *source_graph->detected_communities;
     const unsigned int& n_communities = source_graph->n_communities;
     const unsigned int& n_comm_detected = source_graph->n_comm_detected;
- 
 
     vertex_array = new float[n_vertices * 7];
     index_array = new unsigned int[n_indices * 2];
 
     //WriteVertexRings(detected_communities, n_comm_detected);
-    WriteVertexDynamics();
-    WriteColours(true_communities, n_communities);
+    WriteVertexRings(detected_communities, n_comm_detected);
+    WriteColours(detected_communities, n_comm_detected);
     WriteIndexArray();
 }
 
@@ -31,9 +30,9 @@ void GraphicObject::WriteVertexRings(const std::vector<unsigned int>& communitie
     // param1: scales community radii according to the community size
     // param2: lower_bound of community radius
 
-    float pi = 3.141592f;
+    const float pi = 3.141592f;
     const float param1 = 0.8f;
-    const float param2 = 0.02f;
+    const float param2 = 0.95f;
 
     // membership: N_communities x N_members
 
@@ -51,7 +50,7 @@ void GraphicObject::WriteVertexRings(const std::vector<unsigned int>& communitie
         const float global_angular_increment = 2.0f * pi / (float)n_communities;
         const float centre_x = global_radius * std::sin(float(i) * global_angular_increment);
 		const float centre_y = global_radius * std::cos(float(i) * global_angular_increment);
-        const float radius = std::pow(frac_coeff - param2, 0.5f) - param2;
+        const float radius = std::pow(frac_coeff * param2, 0.5f) * param2;
         const float angular_increment = 2.0f * pi / membership[i].size();
 
         for (unsigned int j = 0; j < membership[i].size(); ++j)
